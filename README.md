@@ -1,1 +1,1 @@
-# Artificial-Neural-Networks-Enhanced-Quotation-Generator-
+# AI-Powered Quotation System (AIPQS)
