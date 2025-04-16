@@ -54,7 +54,7 @@ python test_detection.py
 ## Project Structure
 
 ```plaintext
-Electrical-Blueprint-Quotation-Generator/
+AIPQS/
 ├── datasets/                # Dataset and annotation scripts
 ├── models/                 # Model training scripts
 ├── inference.py           # YOLO inference script
@@ -66,11 +66,11 @@ Electrical-Blueprint-Quotation-Generator/
 ├── test_detection.py       # Detection test script
 └── requirements.txt        # Python dependencies
 ```
-
-## Contributors
-- Rashwan Syed - (Project lead)
-
-
 ## License
 
-MIT License
+This project is under MIT License.
+
+## Contributors
+- Syed Rashwan (Project lead)
+
+
