@@ -1,7 +1,8 @@
 from ultralytics import YOLO
 import os
 
-def train_yolo_model(dataset_path="datasets/blueprints", model_save_path="models/yolov8m_trained.pt", epochs=100, batch_size=16, imgsz=640, lr=0.01, fast_train=False):
+def train_yolo_model(dataset_path="datasets/blueprints", model_save_path="models/yolov8m_trained.pt", epochs=80, 
+                     batch_size=16, imgsz=640, lr=0.01, fast_train=False):
     # Verify dataset exists
     if not os.path.exists(dataset_path):
         raise FileNotFoundError(f"Dataset not found at: {dataset_path}")
