@@ -53,17 +53,23 @@ python test_detection.py
 
 ## Project Structure
 
-- `datasets/` - Dataset and annotation scripts.
-- `models/` - Model training scripts.
-- `inference.py` - YOLO inference script.
-- `object_detection.py` - Object detection script.
-- `quotation_generator.py` - Quotation generation module.
-- `quotation_generation.py` - Alternative quotation generation module.
-- `report_generator.py` - PDF report generation module.
-- `app.py` - Flask web application.
-- `main.py` - Main pipeline script.
-- `test_detection.py` - Detection test script.
-- `requirements.txt` - Python dependencies.
+```plaintext
+Electrical-Blueprint-Quotation-Generator/
+├── datasets/                # Dataset and annotation scripts
+├── models/                 # Model training scripts
+├── inference.py           # YOLO inference script
+├── object_detection.py     # Object detection script
+├── quotation_generator.py   # Quotation generation module
+├── report_generator.py     # PDF report generation module
+├── app.py                  # Flask web application
+├── main.py                 # Main pipeline script
+├── test_detection.py       # Detection test script
+└── requirements.txt        # Python dependencies
+```
+
+## Contributors
+- Rashwan Syed - (Project lead)
+
 
 ## License
 
