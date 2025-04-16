@@ -71,7 +71,10 @@ def upload_file():
             total = subtotal + tax_amount - discount_amount
 
             # Render preview without saving PDF
-            return render_template('result.html', filename=None, items=items, subtotal=subtotal, tax_amount=tax_amount, discount_amount=discount_amount, total=total, total_cost=total, quotation=quotation, class_names=class_names, blueprint_filename=filename, tax_percent=tax_percent, discount_percent=discount_percent)
+            return render_template('result.html', filename=None, items=items, subtotal=subtotal, tax_amount=tax_amount, 
+                                   discount_amount=discount_amount, total=total, total_cost=total, quotation=quotation, 
+                                   class_names=class_names, blueprint_filename=filename, tax_percent=tax_percent, 
+                                   discount_percent=discount_percent)
 
     return render_template('upload.html')
 
