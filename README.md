@@ -1,4 +1,4 @@
-# Electrical Blueprint Quotation Generator
+# AI Powered Quotation Generator (AIPQS)
 
 This project automates the process of analyzing electrical blueprints, detecting electrical components, generating quotations, and producing professional PDF reports.
 
