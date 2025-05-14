@@ -1,5 +1,9 @@
-from flask import Flask, request, render_template, send_file, redirect, url_for, flash
 import os
+import logging
+
+print("Current working directory:", os.getcwd())
+
+from flask import Flask, request, render_template, send_file, redirect, url_for, flash, session
 from scripts.inference import run_inference
 from src.quotation_generator import QuotationGenerator
 from src.report_generator import ReportGenerator
@@ -8,12 +12,18 @@ from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'templates'))
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = 'supersecretkey'  # Needed for flashing messages
+
+# Use environment variable for secret key or fallback to a default (not recommended for production)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'supersecretkey')
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -23,10 +33,12 @@ def upload_file():
     if request.method == 'POST':
         if 'blueprint' not in request.files:
             flash("No file part")
+            logger.warning("No file part in request")
             return redirect(request.url)
         file = request.files['blueprint']
         if file.filename == '':
             flash("No selected file")
+            logger.warning("No file selected")
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -39,10 +51,21 @@ def upload_file():
                 discount_percent = float(request.form.get('discount_percent', 0.0))
             except ValueError:
                 flash("Invalid tax or discount value")
+                logger.warning("Invalid tax or discount value")
                 return redirect(request.url)
 
             # Run inference
-            detections = run_inference(filepath)
+            try:
+                detections = run_inference(filepath)
+                # Cache detections in session to avoid rerunning inference on finalize
+                session['detections'] = detections
+                session['filename'] = filename
+                session['tax_percent'] = tax_percent
+                session['discount_percent'] = discount_percent
+            except Exception as e:
+                flash(f"Inference failed: {str(e)}")
+                logger.error(f"Inference failed: {str(e)}")
+                return redirect(request.url)
 
             # Generate quotation
             qg = QuotationGenerator()
@@ -78,23 +101,18 @@ def upload_file():
 
     return render_template('upload.html')
 
-from flask import jsonify
-
 @app.route('/finalize', methods=['POST'])
 def finalize_quotation():
-    data = request.form
-    blueprint_filename = data.get('blueprint_filename')
-    if not blueprint_filename:
-        flash("Blueprint filename missing")
-        return redirect(url_for('upload_file'))
+    # Retrieve cached detections and data from session
+    detections = session.get('detections')
+    filename = session.get('filename')
+    tax_percent = session.get('tax_percent', 10.0)
+    discount_percent = session.get('discount_percent', 0.0)
 
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], blueprint_filename)
-    if not os.path.exists(filepath):
-        flash("Blueprint file not found")
+    if not detections or not filename:
+        flash("Session expired or missing data. Please upload the blueprint again.")
+        logger.warning("Session expired or missing data on finalize")
         return redirect(url_for('upload_file'))
-
-    # Run inference again (or ideally cache the previous result, but for simplicity rerun)
-    detections = run_inference(filepath)
 
     # Generate quotation
     qg = QuotationGenerator()
@@ -124,6 +142,7 @@ def download_report(filename):
         return send_file(path, as_attachment=True)
     else:
         flash("Report not found")
+        logger.warning(f"Report not found: {filename}")
         return redirect(url_for('upload_file'))
 
 if __name__ == '__main__':

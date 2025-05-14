@@ -172,3 +172,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Ignore dataset image and svg files
+*.png
+*.jpg
+*.jpeg
+*.svg
+
+# Ignore dataset directories
+yolo_dataset/
+cubicasa5k/yolo_annotations/

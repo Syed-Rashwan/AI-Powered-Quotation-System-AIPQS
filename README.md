@@ -10,6 +10,7 @@ This project automates the process of analyzing electrical blueprints, detecting
 - Quotation generation based on detected components.
 - PDF report generation for quotations.
 - Web UI for uploading blueprints and downloading reports.
+- Containerized deployment with Docker for easy setup.
 
 ## Installation
 
@@ -40,10 +41,24 @@ python main.py path/to/blueprint_image.png
 ### Run the Web Application
 
 ```bash
-python app.py
+python src/app.py
 ```
 
 Open your browser at `http://127.0.0.1:5000` to upload blueprints and download quotations.
+
+### Run with Docker
+
+Build the Docker image:
+
+```bash
+docker build -t aipqs .
+```
+
+Run the Docker container:
+
+```bash
+docker run -p 5000:5000 -e FLASK_SECRET_KEY=your_secret_key aipqs
+```
 
 ### Test Detection
 
@@ -57,20 +72,20 @@ python test_detection.py
 AIPQS/
 ├── datasets/                # Dataset and annotation scripts
 ├── models/                 # Model training scripts
-├── inference.py           # YOLO inference script
-├── object_detection.py     # Object detection script
-├── quotation_generator.py   # Quotation generation module
-├── report_generator.py     # PDF report generation module
-├── app.py                  # Flask web application
+├── scripts/                # Inference and dataset preparation scripts
+├── src/                    # Source code for app, detection, quotation, report
+├── templates/              # HTML templates for web UI
+├── runs/                   # Training and inference output
+├── app.py                  # Flask web application entry point (moved to src/)
 ├── main.py                 # Main pipeline script
-├── test_detection.py       # Detection test script
-└── requirements.txt        # Python dependencies
+├── requirements.txt        # Python dependencies
+├── Dockerfile              # Docker container configuration
+└── README.md               # Project documentation
 ```
+
 ## License
 
 This project is under MIT License.
 
 ## Contributors
 - Syed Rashwan (Project lead)
-
-

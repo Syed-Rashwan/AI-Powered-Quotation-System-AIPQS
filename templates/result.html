@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
   <h1 class="mb-4">Quotation Generated</h1>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="alert alert-info" role="alert">
+        {% for message in messages %}
+          <div>{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
   <p>Your quotation has been generated successfully.</p>
   {% if filename %}
   <a href="{{ url_for('download_report', filename=filename) }}" class="btn btn-success mb-3">Download Quotation PDF</a>
