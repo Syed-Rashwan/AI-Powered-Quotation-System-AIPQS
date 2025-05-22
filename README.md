@@ -1,91 +1,101 @@
-# AI Powered Quotation System (AIPQS)
+# AI-Powered Quotation System (AIPQS)
 
-This project automates the process of analyzing electrical blueprints, detecting electrical components, generating quotations, and producing professional PDF reports.
+An intelligent system that processes architectural blueprints to detect rooms, doors, and generate electrical device quotations using YOLOv8 object detection and OCR.
 
 ## Features
 
-- Dataset preparation and annotation for YOLO object detection.
-- YOLOv8 model training on blueprint images.
-- Object detection inference on uploaded blueprints.
-- Quotation generation based on detected components.
-- PDF report generation for quotations.
-- Web UI for uploading blueprints and downloading reports.
-- Containerized deployment with Docker for easy setup.
+- **Room and Door Detection**: Uses YOLOv8 model for detecting rooms and doors in architectural blueprints
+- **Room Name Recognition**: OCR pipeline using EasyOCR and pytesseract for detecting room names
+- **Quotation Generation**: Automatically calculates required electrical devices based on room types
+- **Interactive UI**: Web interface with chatbot assistance for seamless user experience
+
+## Project Structure
+
+```
+.
+├── src/                    # Source code
+│   ├── app.py             # Flask web application
+│   ├── chatbot.py         # Chatbot implementation
+│   ├── object_detection.py # YOLOv8 detection logic
+│   ├── ocr_blueprint_pipeline.py # OCR pipeline
+│   ├── quotation_generator.py # Quotation generation
+│   └── embedding_merge    # Text similarity module
+├── templates/             # HTML templates
+├── models/               # Trained models
+├── scripts/             # Utility scripts
+├── YOLOv8/             # YOLOv8 model files
+└── cubicasa5k/         # Dataset files
+```
+
+## Requirements
+
+- Python 3.8+
+- YOLOv8
+- EasyOCR
+- OpenCV
+- pytesseract
+- Flask
+- Other dependencies in requirements.txt
 
 ## Installation
 
-1. Clone the repository.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/AI-Powered-Quotation-System-AIPQS.git
+cd AI-Powered-Quotation-System-AIPQS
+```
 
-2. Create and activate a Python virtual environment (recommended).
+2. Create and activate virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
 3. Install dependencies:
-
-```
+```bash
 pip install -r requirements.txt
 ```
 
+4. Install Tesseract OCR:
+- Windows: Download and install from [GitHub](https://github.com/UB-Mannheim/tesseract/wiki)
+- Linux: `sudo apt install tesseract-ocr`
+- Mac: `brew install tesseract`
+
 ## Usage
 
-### Train the Model
-
-```bash
-python models/train_yolo.py
-```
-
-### Run Inference and Generate Quotation
-
-```bash
-python main.py path/to/blueprint_image.png
-```
-
-### Run the Web Application
-
+1. Start the Flask application:
 ```bash
 python src/app.py
 ```
 
-Open your browser at `http://127.0.0.1:5000` to upload blueprints and download quotations.
-
-### Run with Docker
-
-Build the Docker image:
-
-```bash
-docker build -t aipqs .
+2. Open a web browser and navigate to:
+```
+http://localhost:5000
 ```
 
-Run the Docker container:
+3. Upload a blueprint image and follow the interface instructions.
 
-```bash
-docker run -p 5000:5000 -e FLASK_SECRET_KEY=your_secret_key aipqs
-```
+## Development
 
-### Test Detection
+- The YOLOv8 model is trained on the CubiCasa5K dataset for room and door detection
+- OCR pipeline uses both EasyOCR and pytesseract with advanced preprocessing
+- Room names are matched using fuzzy matching and embedding-based similarity
+- Quotations are generated based on predefined rules for each room type
 
-```bash
-python test_detection.py
-```
+## Contributing
 
-## Project Structure
-
-```plaintext
-AIPQS/
-├── datasets/                # Dataset and annotation scripts
-├── models/                 # Model training scripts
-├── scripts/                # Inference and dataset preparation scripts
-├── src/                    # Source code for app, detection, quotation, report
-├── templates/              # HTML templates for web UI
-├── runs/                   # Training and inference output
-├── app.py                  # Flask web application entry point (moved to src/)
-├── main.py                 # Main pipeline script
-├── requirements.txt        # Python dependencies
-├── Dockerfile              # Docker container configuration
-└── README.md               # Project documentation
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-This project is under MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Contributors
-- Syed Rashwan (Project lead)
+## Acknowledgments
+
+- CubiCasa5K dataset for training data
+- YOLOv8 for object detection
+- EasyOCR and Tesseract for OCR capabilities
