@@ -5,3 +5,8 @@ pytesseract
 tabulate
 Pillow
 Roboflow
+flask
+werkzeug
+opencv-python
+ultralytics
+reportlab
