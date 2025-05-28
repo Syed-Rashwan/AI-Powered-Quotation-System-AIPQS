@@ -103,3 +103,11 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - The CubiCasa5K dataset for providing extensive training data.
 - YOLOv8 for its powerful object detection capabilities.
 - EasyOCR and Tesseract for enabling advanced OCR functionalities.
+
+---
+
+## Author
+
+Rashwan Syed  
+Email: rashwanuzaib2002@gmail.com  
+GitHub: [https://github.com/Syed-Rashwan](https://github.com/Syed-Rashwan)
