@@ -6,7 +6,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def detect_objects(image_paths, model_path='models/yolov8n_trained.pt', conf_threshold=0.25, class_filter=None, save_annotated=False, output_dir='output'):
+# -- Detect objects --
+def detect_objects(image_paths, model_path='models/yolov8m.pt', conf_threshold=0.25, class_filter=None, save_annotated=False, output_dir='output'):
     """
     Detect objects in one or multiple images using YOLO model.
 
@@ -22,7 +23,7 @@ def detect_objects(image_paths, model_path='models/yolov8n_trained.pt', conf_thr
         dict: Mapping image_path -> list of detections (dict with class_id, class_name, confidence, bbox)
     """
     # Load the trained YOLO model
-    model = YOLO(model_path)
+    model = YOLO(model = YOLO('runs/detect/train7/weights/best.pt'))
 
     # Prepare list of image paths
     if isinstance(image_paths, str):

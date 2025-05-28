@@ -4,15 +4,16 @@ from flask import current_app
 
 # Replace OpenAI API usage with Gemini API usage
 
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'YOUR_GEMINI_API_KEY')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyB-GIIKVZFckpgr77mF88MffwK0JzIgldM')
 GEMINI_API_URL = "https://gemini.api.endpoint/v1/chat"  # Replace with actual Gemini API endpoint
 
+# -- Wingman functions --
 def chat_with_wingman(session_id, user_message):
     """
     Send user message to Gemini API and get assistant response.
     """
     headers = {
-        "Authorization": f"Bearer {YOUR_GEMINI_API_KEY}",
+        "Authorization": f"Bearer {'AIzaSyB-GIIKVZFckpgr77mF88MffwK0JzIgldM'}",
         "Content-Type": "application/json"
     }
     payload = {

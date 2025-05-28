@@ -100,22 +100,42 @@ class ReportGenerator:
         if class_names is None:
             class_names = {}
 
+        # Debug log the input data
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Quotation items: {items}")
+        logger.info(f"Class names mapping: {class_names}")
+
         # Assume unit_prices are available in quotation_data or fallback to 0.0
         unit_prices = quotation_data.get('unit_prices', {})
+        logger.info(f"Unit prices: {unit_prices}")
 
         data = [['Item', 'Quantity', 'Unit Price', 'Total Price']]
         subtotal = 0.0
         for class_id, quantity in items.items():
-            name = class_names.get(class_id, f"Class {class_id}")
-            unit_price = unit_prices.get(class_id, 0.0)
+            # Ensure class_id is treated as integer for class_names lookup
+            class_id_int = int(class_id) if isinstance(class_id, str) else class_id
+            name = class_names.get(class_id_int, f"Class {class_id}")
+            unit_price = unit_prices.get(class_id_int, 0.0)
             total_price = unit_price * quantity
             subtotal += total_price
+            # Debug log the processed data for each item
+            logger.info(f"Processing item - class_id: {class_id} (type: {type(class_id)}), "
+                       f"class_id_int: {class_id_int}, name: {name}, "
+                       f"unit_price: {unit_price}, quantity: {quantity}, "
+                       f"total_price: {total_price}")
             data.append([name, str(quantity), f"${unit_price:.2f}", f"${total_price:.2f}"])
 
         # Subtotal, taxes, discount, and total rows
         tax_amount = subtotal * self.tax_rate
         discount_amount = subtotal * self.discount_rate
         total = subtotal + tax_amount - discount_amount
+
+        # Debug log the final calculations
+        logger.info(f"Final calculations - subtotal: ${subtotal:.2f}, "
+                   f"tax_rate: {self.tax_rate*100:.0f}%, tax_amount: ${tax_amount:.2f}, "
+                   f"discount_rate: {self.discount_rate*100:.0f}%, discount_amount: ${discount_amount:.2f}, "
+                   f"total: ${total:.2f}")
 
         data.append(['', '', 'Subtotal:', f"${subtotal:.2f}"])
         data.append(['', '', f"Tax ({self.tax_rate*100:.0f}%):", f"${tax_amount:.2f}"])

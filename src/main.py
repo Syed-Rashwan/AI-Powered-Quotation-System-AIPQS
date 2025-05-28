@@ -3,7 +3,7 @@ from src.object_detection import detect_objects
 from src.quotation_generator import QuotationGenerator
 from src.report_generator import ReportGenerator
 
-def main(image_path, model_path='models/yolov8n_trained.pt', output_dir='output'):
+def main(image_path, model_path='models/yolov8m.pt', output_dir='output'):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run full pipeline: detection, quotation, report generation")
     parser.add_argument('image_path', type=str, help='Path to blueprint image')
-    parser.add_argument('--model_path', type=str, default='models/yolov8n_trained.pt', help='Path to trained YOLO model')
+    parser.add_argument('--model_path', type=str, default='models/yolov8m.pt', help='Path to trained YOLO model')
     parser.add_argument('--output_dir', type=str, default='output', help='Directory to save the PDF report')
 
     args = parser.parse_args()

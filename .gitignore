@@ -182,3 +182,4 @@ cython_debug/
 # Ignore dataset directories
 yolo_dataset/
 cubicasa5k/yolo_annotations/
+dataset/ 

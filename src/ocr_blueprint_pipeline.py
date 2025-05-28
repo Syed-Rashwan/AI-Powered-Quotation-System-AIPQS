@@ -1,56 +1,53 @@
-import easyocr
 import cv2
 import json
 import numpy as np
 from collections import Counter
 from tabulate import tabulate
 from PIL import Image
-import pytesseract
+import embedding_merge
+from embedding_merge import EmbeddingMerger
+from difflib import get_close_matches
 import sys
 import os
+import easyocr
+import pytesseract
+
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-import embedding_merge
-
 # Define the fixed rule mapping for each room type
 ROOM_DEVICE_RULES = {
-    "Bedroom": {"lights": 3, "switches": 4, "thermostat": 1},
-    "Kitchen": {"lights": 2, "switches": 3, "chimney": 1},
-    "Bathroom": {"lights": 1, "switches": 2, "exhaust fan": 1},
-    "Living Room": {"lights": 4, "switches": 5, "thermostat": 1},
-    "Dining Room": {"lights": 2, "switches": 3},
-    "Bathroom": {"lights": 1, "switches": 1, "exhaust fan": 1},
+    "Bedroom": {"light": 3, "switch": 4, "thermostat": 1},
+    "Kitchen": {"light": 2, "switch": 3, "chimney": 1},
+    "Bathroom": {"light": 1, "switch": 1, "exhaust fan": 1},
+    "Living Room": {"light": 4, "switch": 5, "thermostat": 1},
+    "Dining Room": {"light": 2, "switch": 3},
 }
 
 # List of known room types for filtering OCR results
 KNOWN_ROOMS = set(ROOM_DEVICE_RULES.keys())
 
-# Synonyms dictionary mapping variants to canonical room names
+# Synonyms dictionary 
 ROOM_SYNONYMS = {
     "Bed Room": "Bedroom",
     "Master Bedroom": "Bedroom",
     "Bed": "Bedroom",
+    "Bedroom 1": "Bedroom",
     "Bedroom 2": "Bedroom",
+    "Bedroom 3": "Bedroom",
     "Kitchen Room": "Kitchen",
+    "Bath": "Bathroom",
     "Bath Room": "Bathroom",
+    "Bathroom": "Bathroom",
+    "Master bath": "Bathroom",
+    "WC": "Bathroom",
     "Living": "Living Room",
     "Dinning Room": "Dining Room",
-    "Bath room": "Bathroom",
-    "Master bath": "Bathroom",
-    "Bath": "Bathroom",
-    "WC": "Bathroom",
 }
-
-from difflib import get_close_matches
-import sys
-import os
-import embedding_merge 
-import numpy as np
-
-def detect_rooms(image_path):
+# -- Detect rooms --
+def detect_rooms(image_path, show_image=False):
     """
     Detect room labels in the blueprint image using EasyOCR and pytesseract with advanced preprocessing.
     Uses fuzzy matching to allow minor OCR errors in room names and synonyms.
@@ -70,15 +67,51 @@ def detect_rooms(image_path):
     if image is None:
         raise FileNotFoundError(f"Image not found or unable to read: {image_path}")
 
-    # Preprocess image: convert to grayscale, denoise, apply sharpening and adaptive thresholding
+    # Determine if image is mostly grayscale or colorful
+    # Convert to grayscale and calculate standard deviation of pixel intensities
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    stddev = np.std(gray)
 
-    # Enhance contrast using CLAHE (Contrast Limited Adaptive Histogram Equalization)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    # Save grayscale image for debugging
+    cv2.imwrite("debug_gray.png", gray)
+
+    # Apply CLAHE for contrast enhancement
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
     contrast_enhanced = clahe.apply(gray)
+    cv2.imwrite("debug_clahe.png", contrast_enhanced)
 
-    # Denoise image using fastNlMeansDenoising
-    denoised = cv2.fastNlMeansDenoising(contrast_enhanced, None, h=10, templateWindowSize=7, searchWindowSize=21)
+    # # Apply bilateral filter for denoising with mild parameters
+    # denoised = cv2.bilateralFilter(contrast_enhanced, d=5, sigmaColor=75, sigmaSpace=75)
+    # cv2.imwrite("debug_denoised.png", denoised)
+    denoised = contrast_enhanced
+
+    # Attempt super-resolution upscaling if available, else bicubic
+    try:
+        sr = cv2.dnn_superres.DnnSuperResImpl_create()
+        model_path = "models/EDSR_x3.pb"
+        sr.readModel(model_path)
+        sr.setModel("edsr", 3)
+        upscaled = sr.upsample(denoised)
+        cv2.imwrite("debug_superres_upscaled.png", upscaled)
+    except Exception as e:
+        # Fallback to bicubic upscaling
+        scale_factor = 3
+        height, width = denoised.shape
+        upscaled = cv2.resize(denoised, (width*scale_factor, height*scale_factor), interpolation=cv2.INTER_CUBIC)
+        cv2.imwrite("debug_upscaled.png", upscaled)
+
+    # Increased sharpening kernel intensity but controlled
+    # kernel_sharp = np.array([[0, -1, 0],
+    #                          [-1, 5, -1],
+    #                          [0, -1, 0]])
+    # sharpened = cv2.filter2D(upscaled, -1, kernel_sharp)
+    # cv2.imwrite("debug_sharpened.png", sharpened)
+    sharpened = upscaled
+
+    # Remove thresholding completely 
+    # Use upscaled image directly for OCR without color conversion to avoid blurring
+    preprocessed_image = upscaled
+    cv2.imwrite("debug_preprocessed.png", preprocessed_image)
 
     # Morphological operations to enhance text regions
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
@@ -90,20 +123,33 @@ def detect_rooms(image_path):
                        [0, -1, 0]])
     sharpened = cv2.filter2D(morph, -1, kernel_sharp)
 
-    # Adaptive thresholding for binarization
-    thresh = cv2.adaptiveThreshold(sharpened, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                   cv2.THRESH_BINARY, 11, 2)
+    # # Adaptive thresholding for binarization
+    # thresh = cv2.adaptiveThreshold(sharpened, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    #                                cv2.THRESH_BINARY, 11, 2)
 
-    # Convert back to BGR for EasyOCR
-    preprocessed_image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+    # # Save intermediate preprocessing results for debugging
+    # cv2.imwrite("debug_thresh.png", thresh)
+    
+    # # Convert back to BGR for EasyOCR
+    # preprocessed_image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+    # cv2.imwrite("debug_preprocessed.png", preprocessed_image)
+    # print("Debug images saved: debug_thresh.png, debug_preprocessed.png")
 
-    # Perform OCR detection with EasyOCR
-    # Fix for EasyOCR contrast_ths parameter: use a single float value instead of list to avoid ValueError
-    easyocr_results = reader.readtext(preprocessed_image, contrast_ths=0.1, adjust_contrast=0.7, text_threshold=0.4, low_text=0.3)
+    # Perform OCR detection with EasyOCR with adjusted parameters
+    # Lower confidence thresholds and adjust contrast parameters
+    easyocr_results = reader.readtext(
+        preprocessed_image,
+        contrast_ths=0.05,
+        adjust_contrast=0.7,
+        text_threshold=0.1,  # Lower text confidence threshold further
+        low_text=0.1,      # Lower text detection threshold further
+        width_ths=0.5,     # Adjust width threshold
+        paragraph=False    # Treat each text independently
+    )
 
 
     # Perform OCR detection with pytesseract
-    pytesseract_text = pytesseract.image_to_string(thresh, lang='eng', config='--psm 6')
+    pytesseract_text = pytesseract.image_to_string(preprocessed_image, lang='eng', config='--psm 6')
     pytesseract_lines = [line.strip() for line in pytesseract_text.split('\n') if line.strip()]
 
     detected_rooms = []
@@ -115,12 +161,14 @@ def detect_rooms(image_path):
         print(f"EasyOCR raw detected text: '{text}' with confidence {confidence}")  # Raw text debug print
         normalized_text = text.strip().title()
         print(f"EasyOCR normalized text: '{normalized_text}' with confidence {confidence}")  # Debug print
+        # Debug: print all raw texts before filtering
+        print(f"EasyOCR raw text for analysis: '{text}'")
         if normalized_text in ROOM_SYNONYMS:
             matched_room = ROOM_SYNONYMS[normalized_text]
         else:
-            matches = get_close_matches(normalized_text, KNOWN_ROOMS, n=1, cutoff=0.7)  # Increased cutoff for stricter matching
+            matches = get_close_matches(normalized_text, KNOWN_ROOMS, n=1, cutoff=0.6)  # Lower cutoff for more lenient matching
             matched_room = matches[0] if matches else None
-        if matched_room and confidence > 0.5:
+        if matched_room and confidence > 0.3:  # Lower confidence threshold
             detected_rooms.append(matched_room)
             bounding_boxes.append(bbox)
             confidences.append(confidence)
@@ -162,13 +210,19 @@ def detect_rooms(image_path):
     # Display detected rooms on image with bounding boxes if available
     draw_bounding_boxes(image, merged_bounding_boxes, merged_rooms)
 
-    # Show the image with bounding boxes
-    cv2.imshow("Detected Room Labels", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # Save the image with bounding boxes instead of displaying it
+    output_path = "detected_room_labels_output.png"
+    cv2.imwrite(output_path, image)
+    print(f"Output image with detected room labels saved to {output_path}")
+
+    # Remove the following lines to disable image display in non-interactive environments
+    # cv2.imshow("Detected Room Labels", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     return merged_rooms, merged_bounding_boxes, image
 
+#-- Count devices -- 
 def count_devices(room_counts):
     """
     Given a dictionary of room counts, calculate total devices needed.

@@ -55,24 +55,6 @@
     </tbody>
   </table>
 
-  <h3>Detected Features</h3>
-  <div>
-    <h5>YOLOv8 Detections (Rooms and Windows):</h5>
-    <ul>
-      {% for det in detected_features.detections %}
-        <li>{{ det.class_name }} (Confidence: {{ "%.2f"|format(det.confidence) }})</li>
-      {% endfor %}
-    </ul>
-  </div>
-  <div>
-    <h5>OCR Detected Room Names:</h5>
-    <ul>
-      {% for room in detected_features.room_names %}
-        <li>{{ room }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-
   {% if not filename %}
   <form method="post" action="{{ url_for('finalize_quotation') }}">
     <input type="hidden" name="blueprint_filename" value="{{ blueprint_filename }}">
@@ -83,15 +65,19 @@
   {% endif %}
 
   <!-- Chatbot UI -->
-  <div id="chatbot-container" style="position: fixed; bottom: 20px; right: 20px; width: 350px; max-height: 500px; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
-    <div id="chatbot-header" style="background: #007bff; color: white; padding: 10px; font-weight: bold; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+  <div id="chatbot-container" style="position: fixed; bottom: 20px; right: 20px; width: 350px; max-height: 500px; background:
+   white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: flex; 
+   flex-direction: column;">
+    <div id="chatbot-header" style="background: #007bff; color: white; padding: 10px; font-weight: bold; border-top-left-radius: 
+    8px; border-top-right-radius: 8px;">
       Wingman Chatbot
     </div>
     <div id="chatbot-messages" style="flex-grow: 1; padding: 10px; overflow-y: auto; font-size: 14px;">
       <div class="chatbot-message chatbot-assistant">Hello! I'm Wingman, your assistant. How can I help you today?</div>
     </div>
     <form id="chatbot-form" style="display: flex; border-top: 1px solid #ccc;">
-      <input type="text" id="chatbot-input" placeholder="Type your message..." style="flex-grow: 1; border: none; padding: 10px; font-size: 14px;" autocomplete="off" />
+      <input type="text" id="chatbot-input" placeholder="Type your message..." style="flex-grow: 1; border: none; padding: 10px;
+       font-size: 14px;" autocomplete="off" />
       <button type="submit" style="background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer;">Send</button>
     </form>
   </div>

@@ -1,14 +1,14 @@
 from ultralytics import YOLO
 import os
 
-def train_yolo_model(dataset_path="datasets/blueprints", model_save_path="models/yolov8m_trained.pt", epochs=80, 
-                     batch_size=16, imgsz=640, lr=0.01, fast_train=False):
+def train_yolo_model(dataset_path="Dataset", model_save_path="models/yolov8m.pt", epochs=100, 
+                     batch_size=16, imgsz=640, lr=0.01, fast_train=False, pretrained_model_path="models/yolov8m.pt", resume_training=False):
     # Verify dataset exists
     if not os.path.exists(dataset_path):
         raise FileNotFoundError(f"Dataset not found at: {dataset_path}")
 
-    # Load pretrained YOLOv8 medium model for better accuracy
-    model = YOLO('models/yolov8m.pt')  # Load pretrained model
+    # Load pretrained YOLOv8 model or resume from trained model
+    model = YOLO(pretrained_model_path)  # Load model
 
     # Check for GPU availability and use GPU if available
     import torch
@@ -25,9 +25,6 @@ def train_yolo_model(dataset_path="datasets/blueprints", model_save_path="models
         imgsz = min(imgsz, 320)
         print("Fast training mode enabled: reduced epochs, batch size, and image size.")
 
-    # Disable resume training to avoid assertion error when starting fresh
-    resume_training = False
-
     # Train the model with data augmentation (enabled by default in YOLOv8)
     results = model.train(
         data=data_yaml_path,
@@ -38,8 +35,8 @@ def train_yolo_model(dataset_path="datasets/blueprints", model_save_path="models
         lr0=lr,
         workers=4 if device == '0' else 2,
         save=True,  # Save best model automatically
-        patience=10,  # Early stopping patience
-        resume=resume_training  # Do not resume training to avoid errors
+        #patience=10,  # Early stopping patience
+        resume=False  # Always start new training, do not resume
     )
 
     # Save the trained model
@@ -47,4 +44,11 @@ def train_yolo_model(dataset_path="datasets/blueprints", model_save_path="models
     print(f"Model saved to {model_save_path}")
 
 if __name__ == "__main__":
-    train_yolo_model()
+    # Example: continue training from trained model for 80 more epochs without resume flag
+    train_yolo_model(
+        dataset_path="Dataset",
+        model_save_path="models/yolov8m.pt",
+        epochs=80,
+        pretrained_model_path="models/yolov8m.pt",
+        resume_training=False
+    )
